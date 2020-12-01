@@ -12,7 +12,9 @@
   "dependencies": {
     "express": "^4.17.1",
     "axios": "^0.21.0",
-    "@dtinth/encrypted": "^0.2.0"
+    "@dtinth/encrypted": "^0.2.0",
+    "@octokit/app": "^10.0.0",
+    "@octokit/rest": "^18.0.7"
   },
   "engines": {
     "node": "12.x"

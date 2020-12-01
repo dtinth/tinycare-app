@@ -35,6 +35,7 @@ ekVuensxyE/YhFQ+2os/RlVUW++VTUgYVOH1ehtoF6qgAQREfUDcHnhXEGoSkjnAAhC3w76h
 oCAEJv3Zj38L4/XoQWP7sdb5RZIJuiCwuMtnCbygxCC8fXbIV1MEqGvDu6A1OySQYJhZ2Y8E
 iCbMs9t/6opRKGy0ZRzcJPavHfvxaIMDDe1WyW9sb1SBe9zuo1e067xTfaiS8CRbl1Gsb7eg
 u0o+lGZJE8jrgbWBNUhaud7mH7CxS6cLkg==`);
+const { App } = require("@octokit/app");
 
 app.use(express.json());
 app.post("/github", async (req, res, next) => {
@@ -45,6 +46,17 @@ app.post("/github", async (req, res, next) => {
     if (req.body.action !== "requested") {
       return ignored("Irrelevant action");
     }
+    if (req.body.check_suite.app.id !== 90888) {
+      return ignored("Irrelevant app");
+    }
+    const installationId = req.body.installation.id
+    const app = new App({
+      id: 90888,
+      privateKey: 
+    })
+    const installationAccessToken = await app.getInstallationAccessToken({
+      installationId: args.installationId,
+    })
     res.send({ ok: true });
   } catch (error) {
     console.error(error);
