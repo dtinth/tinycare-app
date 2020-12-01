@@ -14,7 +14,8 @@
     "axios": "^0.21.0",
     "@dtinth/encrypted": "^0.2.0",
     "@octokit/app": "^10.0.0",
-    "@octokit/rest": "^18.0.7"
+    "@octokit/rest": "^18.0.7",
+    "applicationinsights": "^1.8.7"
   },
   "engines": {
     "node": "12.x"

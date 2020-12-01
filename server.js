@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const axios = require("axios");
 const encrypted = require("@dtinth/encrypted")();
+const appInsights = require("applicationinsights");
+appInsights.setup()
 
 const privateKey = encrypted(`Y6LVX4qQeK77toiOG/ma/O236nV+l7m7.ypEHltakBrY2yKD8TGWjCvHBIMRE
 qTatIIrjsQ9jTwK/bJV1dvNfW4UM09Q5JLWN/pJZ3l02sA7yrmqjZ/cM6GUItvg4sI7sZ5b7
@@ -102,6 +104,7 @@ app.post("/github", async (req, res, next) => {
     res.status(500).send({ ok: false });
   }
 });
+
 const listener = app.listen(process.env.PORT, () => {
   console.log("Your app is listening on port " + listener.address().port);
 });
