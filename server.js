@@ -39,6 +39,7 @@ u0o+lGZJE8jrgbWBNUhaud7mH7CxS6cLkg==`);
 
 const { App } = require("@octokit/app");
 let cached
+let nextFetch = Date.now() + 60e3
 
 async function fetchTweets() {
   const { data } = await axios.get('https://pleasetakecareofyourself.now.sh/api/tweets')
@@ -47,19 +48,19 @@ async function fetchTweets() {
 
 async function getTweets() {
   if (!cached) {
-    cached = await fetchTweets()
-    const expires = Date.now() + 60e3
     cached = {
-      data,
-      isExpired: () => Date.now() < expires
+      data: await fetchTweets()
     }
   }
-  if (cached) {
-    if (cached.isExpired()) {
-
-    }
-    return cached.data
+  if (Date.now() > nextFetch) {
+    nextFetch = Date.now() + 60e3
+    ;(async () => {
+      cached = {
+        data: await fetchTweets()
+      }
+    })()
   }
+  return cached.data
 }
 
 app.use(express.json());
@@ -86,7 +87,7 @@ app.post("/github", async (req, res, next) => {
     await octokit.request('POST /repos/{owner}/{repo}/check-runs', {
       owner: req.body.repository.owner.login,
       repo: req.body.repository.name,
-      name: 'tinycare',
+      name: '@' + tweet.user.screen_name,
       head_sha: req.body.check_suite.head_sha,
       status: 'completed',
       conclusion: 'neutral',
