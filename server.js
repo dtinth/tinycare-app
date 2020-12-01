@@ -91,7 +91,6 @@ app.post("/github", async (req, res, next) => {
       head_sha: req.body.check_suite.head_sha,
       status: 'completed',
       conclusion: 'neutral',
-      details_url: 'https://docs.github.com/en/free-pro-team@latest/rest/reference/checks#create-a-check-run',
       output: {
         title: tweet.text,
         summary: '&mdash;[@' + tweet.user.screen_name + '](' + tweet.url + ')',
