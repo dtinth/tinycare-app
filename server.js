@@ -39,6 +39,11 @@ u0o+lGZJE8jrgbWBNUhaud7mH7CxS6cLkg==`);
 
 const { App } = require("@octokit/app");
 
+async function getTweets() {
+  const { data } = await axios.get('https://pleasetakecareofyourself.now.sh/api/tweets')
+  return data
+}
+
 app.use(express.json());
 app.post("/github", async (req, res, next) => {
   try {
@@ -51,6 +56,7 @@ app.post("/github", async (req, res, next) => {
     if (req.body.check_suite.app.id !== 90888) {
       return ignored("Irrelevant app");
     }
+    const tweets = await getTweets()
     const installationId = req.body.installation.id;
     const app = new App({
       appId: 90888,
@@ -67,7 +73,7 @@ app.post("/github", async (req, res, next) => {
       conclusion: 'neutral',
       details_url: 'https://docs.github.com/en/free-pro-team@latest/rest/reference/checks#create-a-check-run',
       output: {
-        title: ':)',
+        title: tweets[0].text,
         summary: '^_^',
       }
     })
