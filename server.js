@@ -3,7 +3,22 @@ const app = express();
 const axios = require("axios");
 const encrypted = require("@dtinth/encrypted")();
 const appInsights = require("applicationinsights");
-appInsights.setup()
+const { createHash } = require("crypto");
+const hashSalt = (value, salt) =>
+  createHash("md5")
+    .update(
+      createHash("md5")
+        .update(String(value))
+        .digest("hex")
+    )
+    .update(
+      createHash("md5")
+        .update(salt)
+        .digest("hex")
+    )
+    .digest("hex");
+
+appInsights.setup();
 
 const privateKey = encrypted(`Y6LVX4qQeK77toiOG/ma/O236nV+l7m7.ypEHltakBrY2yKD8TGWjCvHBIMRE
 qTatIIrjsQ9jTwK/bJV1dvNfW4UM09Q5JLWN/pJZ3l02sA7yrmqjZ/cM6GUItvg4sI7sZ5b7
@@ -40,29 +55,31 @@ iCbMs9t/6opRKGy0ZRzcJPavHfvxaIMDDe1WyW9sb1SBe9zuo1e067xTfaiS8CRbl1Gsb7eg
 u0o+lGZJE8jrgbWBNUhaud7mH7CxS6cLkg==`);
 
 const { App } = require("@octokit/app");
-let cached
-let nextFetch = Date.now() + 60e3
+let cached;
+let nextFetch = Date.now() + 60e3;
 
 async function fetchTweets() {
-  const { data } = await axios.get('https://pleasetakecareofyourself.now.sh/api/tweets')
-  return data
+  const { data } = await axios.get(
+    "https://pleasetakecareofyourself.now.sh/api/tweets"
+  );
+  return data;
 }
 
 async function getTweets() {
   if (!cached) {
     cached = {
       data: await fetchTweets()
-    }
+    };
   }
   if (Date.now() > nextFetch) {
-    nextFetch = Date.now() + 60e3
-    ;(async () => {
+    nextFetch = Date.now() + 60e3;
+    (async () => {
       cached = {
         data: await fetchTweets()
-      }
-    })()
+      };
+    })();
   }
-  return cached.data
+  return cached.data;
 }
 
 app.use(express.json());
@@ -77,27 +94,42 @@ app.post("/github", async (req, res, next) => {
     if (req.body.check_suite.app.id !== 90888) {
       return ignored("Irrelevant app");
     }
-    const tweets = await getTweets()
-    const tweet = tweets[~~(Math.random() * tweets.length)]
+    const tweets = await getTweets();
+    const tweet = tweets[~~(Math.random() * tweets.length)];
     const installationId = req.body.installation.id;
     const app = new App({
       appId: 90888,
       privateKey: privateKey
     });
-    console.log(installationId)
     const octokit = await app.getInstallationOctokit(installationId);
-    await octokit.request('POST /repos/{owner}/{repo}/check-runs', {
+    await octokit.request("POST /repos/{owner}/{repo}/check-runs", {
       owner: req.body.repository.owner.login,
       repo: req.body.repository.name,
-      name: '@' + tweet.user.screen_name,
+      name: "@" + tweet.user.screen_name,
       head_sha: req.body.check_suite.head_sha,
-      status: 'completed',
-      conclusion: 'neutral',
+      status: "completed",
+      conclusion: "neutral",
       output: {
         title: tweet.text,
-        summary: '&mdash;[@' + tweet.user.screen_name + '](' + tweet.url + ')',
+        summary: "&mdash;[@" + tweet.user.screen_name + "](" + tweet.url + ")"
       }
-    })
+    });
+    let client = appInsights.defaultClient;
+    const telemetryProperties = {
+      owner: hashSalt(
+        req.body.repository.owner.node_id,
+        "AGNTAWXR+UsApSN8j2XdiwFfYEctM3yp"
+      ),
+      repo: hashSalt(
+        req.body.repository.node_id,
+        "Fu9rnqGYy+6Txb/efIBakosx+vftQTX6"
+      )
+    };
+    console.log(JSON.stringify(telemetryProperties));
+    client.trackEvent({
+      name: "tinycare-webhook",
+      properties: telemetryProperties
+    });
     res.send({ ok: true });
   } catch (error) {
     console.error(error);
