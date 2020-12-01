@@ -38,10 +38,28 @@ iCbMs9t/6opRKGy0ZRzcJPavHfvxaIMDDe1WyW9sb1SBe9zuo1e067xTfaiS8CRbl1Gsb7eg
 u0o+lGZJE8jrgbWBNUhaud7mH7CxS6cLkg==`);
 
 const { App } = require("@octokit/app");
+let cached
 
-async function getTweets() {
+async function fetchTweets() {
   const { data } = await axios.get('https://pleasetakecareofyourself.now.sh/api/tweets')
   return data
+}
+
+async function getTweets() {
+  if (!cached) {
+    cached = await fetchTweets()
+    const expires = Date.now() + 60e3
+    cached = {
+      data,
+      isExpired: () => Date.now() < expires
+    }
+  }
+  if (cached) {
+    if (cached.isExpired()) {
+
+    }
+    return cached.data
+  }
 }
 
 app.use(express.json());
@@ -57,6 +75,7 @@ app.post("/github", async (req, res, next) => {
       return ignored("Irrelevant app");
     }
     const tweets = await getTweets()
+    const tweet = tweets[~~(Math.random() * tweets.length)]
     const installationId = req.body.installation.id;
     const app = new App({
       appId: 90888,
@@ -73,8 +92,8 @@ app.post("/github", async (req, res, next) => {
       conclusion: 'neutral',
       details_url: 'https://docs.github.com/en/free-pro-team@latest/rest/reference/checks#create-a-check-run',
       output: {
-        title: tweets[0].text,
-        summary: '^_^',
+        title: tweet.text,
+        summary: '&mdash;[@' + tweet.user.screen_name + '](' + tweet.url + ')',
       }
     })
     res.send({ ok: true });
