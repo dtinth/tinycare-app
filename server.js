@@ -1,22 +1,56 @@
 const express = require("express");
 const app = express();
-const axios = require('axios')
+const axios = require("axios");
+const encrypted = require("@dtinth/encrypted")();
+const privateKey = encrypted(`Y6LVX4qQeK77toiOG/ma/O236nV+l7m7.ypEHltakBrY2yKD8TGWjCvHBIMRE
+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
+u0o+lGZJE8jrgbWBNUhaud7mH7CxS6cLkg==`);
 
 app.use(express.json());
-app.post('/github', async (req, res, next) => {
+app.post("/github", async (req, res, next) => {
   try {
-    const ignored = (reason) => {
-      res.send({ ok: true, ignored: reason })
+    const ignored = reason => {
+      res.send({ ok: true, ignored: reason });
+    };
+    if (req.body.action !== "requested") {
+      return ignored("Irrelevant action");
     }
-    if (req.body.action !== 'requested') {
-      return ignored('Irrelevant action')
-    }
-    res.send({ ok: true })
+    res.send({ ok: true });
   } catch (error) {
-    console.error(error)
-    res.status(500).send({ ok: false })
+    console.error(error);
+    res.status(500).send({ ok: false });
   }
-})
+});
 const listener = app.listen(process.env.PORT, () => {
   console.log("Your app is listening on port " + listener.address().port);
 });
