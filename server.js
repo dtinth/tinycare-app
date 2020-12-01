@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const axios = require("axios");
 const encrypted = require("@dtinth/encrypted")();
+
 const privateKey = encrypted(`Y6LVX4qQeK77toiOG/ma/O236nV+l7m7.ypEHltakBrY2yKD8TGWjCvHBIMRE
 qTatIIrjsQ9jTwK/bJV1dvNfW4UM09Q5JLWN/pJZ3l02sA7yrmqjZ/cM6GUItvg4sI7sZ5b7
 wLcRmpEQ9qN3XZ/dqz3M28SzIqBpSYMSB1sND42WGXQWZc5nj70n7gHh1SLREWAaFon5G8Ym
@@ -35,6 +36,7 @@ ekVuensxyE/YhFQ+2os/RlVUW++VTUgYVOH1ehtoF6qgAQREfUDcHnhXEGoSkjnAAhC3w76h
 oCAEJv3Zj38L4/XoQWP7sdb5RZIJuiCwuMtnCbygxCC8fXbIV1MEqGvDu6A1OySQYJhZ2Y8E
 iCbMs9t/6opRKGy0ZRzcJPavHfvxaIMDDe1WyW9sb1SBe9zuo1e067xTfaiS8CRbl1Gsb7eg
 u0o+lGZJE8jrgbWBNUhaud7mH7CxS6cLkg==`);
+
 const { App } = require("@octokit/app");
 
 app.use(express.json());
@@ -49,13 +51,25 @@ app.post("/github", async (req, res, next) => {
     if (req.body.check_suite.app.id !== 90888) {
       return ignored("Irrelevant app");
     }
-    const installationId = req.body.installation.id
+    const installationId = req.body.installation.id;
     const app = new App({
-      id: 90888,
-      privateKey: 
-    })
-    const installationAccessToken = await app.getInstallationAccessToken({
-      installationId: args.installationId,
+      appId: 90888,
+      privateKey: privateKey
+    });
+    console.log(installationId)
+    const octokit = await app.getInstallationOctokit(installationId);
+    await octokit.request('POST /repos/{owner}/{repo}/check-runs', {
+      owner: req.body.repository.owner.login,
+      repo: req.body.repository.name,
+      name: 'tinycare',
+      head_sha: req.body.check_suite.head_sha,
+      status: 'completed',
+      conclusion: 'neutral',
+      details_url: 'https://docs.github.com/en/free-pro-team@latest/rest/reference/checks#create-a-check-run',
+      output: {
+        title: ':)',
+        summary: '^_^',
+      }
     })
     res.send({ ok: true });
   } catch (error) {
